@@ -150,10 +150,9 @@ package_kodi-c2-fb() {
       ${pkgdir}${_prefix}/share/licenses/${pkgname}
   done
 
-install -Dm0644 $srcdir/20-quiet-printk.conf $pkgdir/etc/sysctl.d/20-quiet-printk.conf
-install -Dm0644 $srcdir/kodi_permissions.conf $pkgdir/etc/tmpfiles.d/kodi_permissions.conf
-install -Dm0644 $srcdir/kodi.service $pkgdir/usr/lib/systemd/system/kodi.service
-install -Dm0644 $srcdir/polkit.rules $pkgdir/etc/polkit-1/rules.d/10-kodi.rules
+  install -Dm0644 $srcdir/kodi_permissions.conf $pkgdir/etc/tmpfiles.d/kodi_permissions.conf
+  install -Dm0644 $srcdir/kodi.service $pkgdir/usr/lib/systemd/system/kodi.service
+  install -Dm0644 $srcdir/polkit.rules $pkgdir/etc/polkit-1/rules.d/10-kodi.rules
 }
 
 package_kodi-c2-eventclients-fb() {
