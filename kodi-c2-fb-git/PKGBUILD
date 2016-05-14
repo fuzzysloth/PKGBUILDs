@@ -18,6 +18,7 @@ _prefix=/usr
 
 pkgbase=kodi-c2-fb
 pkgname=('kodi-c2-fb' 'kodi-c2-eventclients-fb')
+_commit=cdb7704d1174395f399657fd3f562fe236516b9f
 pkgver=16.1
 pkgrel=2
 _codename=unknown
@@ -34,7 +35,7 @@ makedepends=(
     'shairplay' 'smbclient' 'swig' 'taglib' 'tinyxml' 'unzip' 'upower' 'yajl' 
     'zip' 'dcadec'
 )
-source=("git+https://github.com/Owersun/xbmc.git"
+source=("git+https://github.com/Owersun/xbmc/archive/${_commit}.tar.gz"
         "git+https://github.com/mdrjr/c2_mali.git"
         'gcc6_fix.patch'
         'disable_codecs.patch'
@@ -44,7 +45,7 @@ source=("git+https://github.com/Owersun/xbmc.git"
         'kodi_permissions.conf')
 
 
-sha256sums=('SKIP'
+sha256sums=('a56165257af0ee6899317093c412603b01967068536ae200dfcab0b74bdc501d'
             'SKIP'
             'fcc5b55ae1904b8cc99e71e52859446d34930c82371cb1598ffd9eb27f93341f'
             'b1942f2e11b999d0c539ae94ae14e7f65a744414622e4290bf9b300cfa0f85e2'
@@ -54,18 +55,18 @@ sha256sums=('SKIP'
             'ecc413a1cfd4622b79de16010c9d8d269f774ad89d2e547553e36fbd236e8593')
 
 prepare() {
-  cd xbmc
+  cd xbmc-${_commit}
   #git checkout Jarvis
   find -type f -name *.py -exec sed 's|^#!.*python$|#!/usr/bin/python2|' -i "{}" +
   sed 's|^#!.*python$|#!/usr/bin/python2|' -i tools/depends/native/rpl-native/rpl
   sed 's/python/python2/' -i tools/Linux/kodi.sh.in
-  patch -Np1 -i ${srcdir}/gcc6_fix.patch
+  patch -Np1 -i "$srcdir/gcc6_fix.patch"
   patch -p1 -i "$srcdir/disable_codecs.patch"
   patch -p1 -i "$srcdir/disable_passthrough.patch"
 }
 
 build() {
-  cd xbmc
+  cd xbmc-${_commit}
   MALI_INCLUDE=$srcdir/c2_mali/fbdev/mali_headers
   CFLAGS=`echo "$CFLAGS -I$MALI_INCLUDE -Ofast -mcpu=cortex-a53 -ffast-math"` && CXXFLAGS="$CFLAGS"
   LDFLAGS+=" -L/usr/lib/mali-egl -L/usr/lib/aml_libs"
@@ -138,7 +139,7 @@ package_kodi-c2-fb() {
   conflicts=('xbmc' 'kodi')
   replaces=('xbmc')
 
-  cd xbmc
+  cd xbmc-${_commit}
   # Running make install
   make DESTDIR="$pkgdir" install
 
@@ -161,7 +162,7 @@ package_kodi-c2-eventclients-fb() {
   conflicts=('kodi-eventclients')
   depends=('cwiid')
 
-  cd xbmc
+  cd xbmc-${_commit}
 
   make DESTDIR="$pkgdir" eventclients WII_EXTRA_OPTS=-DCWIID_OLD
 
