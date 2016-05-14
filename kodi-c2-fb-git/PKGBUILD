@@ -35,7 +35,7 @@ makedepends=(
     'shairplay' 'smbclient' 'swig' 'taglib' 'tinyxml' 'unzip' 'upower' 'yajl' 
     'zip' 'dcadec'
 )
-source=("git+https://github.com/Owersun/xbmc/archive/${_commit}.tar.gz"
+source=("https://github.com/Owersun/xbmc/archive/${_commit}.tar.gz"
         "git+https://github.com/mdrjr/c2_mali.git"
         'gcc6_fix.patch'
         'disable_codecs.patch'
