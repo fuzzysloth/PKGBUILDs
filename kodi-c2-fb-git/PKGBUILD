@@ -18,8 +18,8 @@ _prefix=/usr
 
 pkgbase=kodi-c2-fb
 pkgname=('kodi-c2-fb' 'kodi-c2-eventclients-fb')
-pkgver=16.1.20160320
-pkgrel=1
+pkgver=16.1
+pkgrel=2
 _codename=unknown
 arch=('aarch64')
 url="http://kodi.tv"
@@ -36,6 +36,7 @@ makedepends=(
 )
 source=("git+https://github.com/Owersun/xbmc.git"
         "git+https://github.com/mdrjr/c2_mali.git"
+        'gcc6_fix.patch'
         'disable_codecs.patch'
         'disable_passthrough.patch'
         'kodi.service'
@@ -45,6 +46,7 @@ source=("git+https://github.com/Owersun/xbmc.git"
 
 sha256sums=('SKIP'
             'SKIP'
+            'fcc5b55ae1904b8cc99e71e52859446d34930c82371cb1598ffd9eb27f93341f'
             'b1942f2e11b999d0c539ae94ae14e7f65a744414622e4290bf9b300cfa0f85e2'
             '51c387ed3747fa87c11f2af204ec09420ddb21271d465e8a10af7495298f760d'
             '79aa17b475967d97b6c72c850b638705d6feb6d995844476b65d68d33d161114'
@@ -57,6 +59,7 @@ prepare() {
   find -type f -name *.py -exec sed 's|^#!.*python$|#!/usr/bin/python2|' -i "{}" +
   sed 's|^#!.*python$|#!/usr/bin/python2|' -i tools/depends/native/rpl-native/rpl
   sed 's/python/python2/' -i tools/Linux/kodi.sh.in
+  patch -Np1 -i ${srcdir}/gcc6_fix.patch
   patch -p1 -i "$srcdir/disable_codecs.patch"
   patch -p1 -i "$srcdir/disable_passthrough.patch"
 }
