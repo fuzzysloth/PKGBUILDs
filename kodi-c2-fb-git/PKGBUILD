@@ -40,8 +40,7 @@ source=("git+https://github.com/Owersun/xbmc.git"
         'disable_passthrough.patch'
         'kodi.service'
         'polkit.rules'
-        'kodi_permissions.conf'
-        '20-quiet-printk.conf')
+        'kodi_permissions.conf')
 
 
 sha256sums=('SKIP'
@@ -50,8 +49,7 @@ sha256sums=('SKIP'
             '51c387ed3747fa87c11f2af204ec09420ddb21271d465e8a10af7495298f760d'
             '79aa17b475967d97b6c72c850b638705d6feb6d995844476b65d68d33d161114'
             'c68ed2bd377f80b606b8815d78239b9132b479eafc1d19797cee5824debe1800'
-            'ecc413a1cfd4622b79de16010c9d8d269f774ad89d2e547553e36fbd236e8593'
-            'e3cb9a3a3d814295bdfac6ac325b5560e8ba0a2fb00f11d6dcc9afde49f30990')
+            'ecc413a1cfd4622b79de16010c9d8d269f774ad89d2e547553e36fbd236e8593')
 
 prepare() {
   cd xbmc
@@ -95,8 +93,7 @@ build() {
     --enable-gles \
     --disable-gl \
     --disable-openmax \
-    --disable-vdpau \
-    --disable-pulse
+    --disable-vdpau
 
  # Now (finally) build
 #  make
