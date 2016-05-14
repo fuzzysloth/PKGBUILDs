@@ -136,7 +136,7 @@ package_kodi-c2-fb() {
   )
   install="kodi.install"
   provides=('xbmc' 'kodi')
-  conflicts=('xbmc' 'kodi')
+  conflicts=('xbmc' 'kodi' 'ffmpeg2.8')
   replaces=('xbmc')
 
   cd xbmc-${_commit}
