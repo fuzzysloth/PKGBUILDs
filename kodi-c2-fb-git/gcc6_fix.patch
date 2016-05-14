@@ -1,5 +1,5 @@
 From 8f82e51563f0e1bc9b7a8adf669ad2b66e7ce3e5 Mon Sep 17 00:00:00 2001
-From: Bernd Kuhls 
+From: Bernd Kuhls <bernd.kuhls@t-online.de>
 Date: Thu, 28 Apr 2016 17:17:40 +0200
 Subject: [PATCH] lib/cximage-6.0: fix compilation with gcc6
 
@@ -52,7 +52,7 @@ index 726ff91..55842b1 100644
  		bihtoh((BITMAPINFOHEADER*)pDib);
 @@ -86,7 +86,7 @@ bool CxImageBMP::Decode(CxFile * hFile)
  	BITMAPFILEHEADER   bf;
- 	DWORD off = hFile->Tell(); //
+ 	DWORD off = hFile->Tell(); //<CSC>
    cx_try {
 -	if (hFile->Read(&bf,min(14,sizeof(bf)),1)==0) cx_throw("Not a BMP");
 +	if (hFile->Read(&bf,cxmin(14,sizeof(bf)),1)==0) cx_throw("Not a BMP");
@@ -173,7 +173,7 @@ index 8425bb2..813253b 100644
  }
 @@ -707,7 +707,7 @@ bool CxImage::Light(long brightness, long contrast)
  
- 	BYTE cTable[256]; //
+ 	BYTE cTable[256]; //<nipper>
  	for (int i=0;i<256;i++)	{
 -		cTable[i] = (BYTE)max(0,min(255,(int)((i-128)*c + brightness + 0.5f)));
 +		cTable[i] = (BYTE)cxmax(0,cxmin(255,(int)((i-128)*c + brightness + 0.5f)));
@@ -288,7 +288,20 @@ index 8425bb2..813253b 100644
  			}
 @@ -1284,9 +1284,9 @@ bool CxImage::ShiftRGB(long r, long g, long b)
  	} else {
- 		for(DWORD j=0; j
+ 		for(DWORD j=0; j<head.biClrUsed; j++){
+ 			color = GetPaletteColor((BYTE)j);
+-			color.rgbRed = (BYTE)max(0,min(255,(int)(color.rgbRed + r)));
+-			color.rgbGreen = (BYTE)max(0,min(255,(int)(color.rgbGreen + g)));
+-			color.rgbBlue = (BYTE)max(0,min(255,(int)(color.rgbBlue + b)));
++			color.rgbRed = (BYTE)cxmax(0,cxmin(255,(int)(color.rgbRed + r)));
++			color.rgbGreen = (BYTE)cxmax(0,cxmin(255,(int)(color.rgbGreen + g)));
++			color.rgbBlue = (BYTE)cxmax(0,cxmin(255,(int)(color.rgbBlue + b)));
+ 			SetPaletteColor((BYTE)j,color);
+ 		}
+ 	}
+@@ -1310,7 +1310,7 @@ bool CxImage::Gamma(float gamma)
+ 
+ 	BYTE cTable[256]; //<nipper>
  	for (int i=0;i<256;i++)	{
 -		cTable[i] = (BYTE)max(0,min(255,(int)( pow((double)i, dinvgamma) / dMax)));
 +		cTable[i] = (BYTE)cxmax(0,cxmin(255,(int)( pow((double)i, dinvgamma) / dMax)));
@@ -356,7 +369,10 @@ index 8425bb2..813253b 100644
  	if (direction==-1) nn=1/nn;
  	//bMagnitude : just to see it on the screen
 @@ -1626,15 +1626,15 @@ bool CxImage::FFT2(CxImage* srcReal, CxImage* srcImag, CxImage* dstReal, CxImage
- 	for (j=0;jSetPixelIndex(k,j,(BYTE)max(0,min(255,(nn*(3+log(_cabs(grid[k][j])))))));
+ 	for (j=0;j<h;j++) {
+ 		for (k=0;k<w;k++) {
+ 			if (bMagnitude){
+-				tmpReal->SetPixelIndex(k,j,(BYTE)max(0,min(255,(nn*(3+log(_cabs(grid[k][j])))))));
 +				tmpReal->SetPixelIndex(k,j,(BYTE)cxmax(0,cxmin(255,(nn*(3+log(_cabs(grid[k][j])))))));
  				if (grid[k][j].x==0){
 -					tmpImag->SetPixelIndex(k,j,(BYTE)max(0,min(255,(128+(atan(grid[k][j].y/0.0000000001)*nn)))));
@@ -436,7 +452,22 @@ index 8425bb2..813253b 100644
 -				cTable[i] = (BYTE)max(0,min(255,(int)(i + saturation)));
 +				cTable[i] = (BYTE)cxmax(0,cxmin(255,(int)(i + saturation)));
  			}
- 			for(long y=ymin; yleft,0);
+ 			for(long y=ymin; y<ymax; y++){
+ 				info.nProgress = (long)(100*(y-ymin)/(ymax-ymin));
+@@ -3012,7 +3012,7 @@ bool CxImage::Saturate(const long saturation, const long colorspace)
+ 	case 2:
+ 		{
+ 			for (int i=0;i<256;i++)	{
+-				cTable[i] = (BYTE)max(0,min(255,(int)((i-128)*(100 + saturation)/100.0f + 128.5f)));
++				cTable[i] = (BYTE)cxmax(0,cxmin(255,(int)((i-128)*(100 + saturation)/100.0f + 128.5f)));
+ 			}
+ 			for(long y=ymin; y<ymax; y++){
+ 				info.nProgress = (long)(100*(y-ymin)/(ymax-ymin));
+@@ -3242,10 +3242,10 @@ int  CxImage::OptimalThreshold(long method, RECT * pBox, CxImage* pContrastMask)
+ 
+ 	long xmin,xmax,ymin,ymax;
+ 	if (pBox){
+-		xmin = max(pBox->left,0);
 -		xmax = min(pBox->right,head.biWidth);
 -		ymin = max(pBox->bottom,0);
 -		ymax = min(pBox->top,head.biHeight);
@@ -557,7 +588,86 @@ index a2aed03..5391107 100644
 +		lut[x] = (BYTE)cxmax(0,cxmin(255,(255 * (x - minc) / (maxc - minc))));
  	}
  
- 	for (y=0; yGetEffWidth();
+ 	for (y=0; y<head.biHeight; y++)	{
+@@ -152,7 +152,7 @@ bool CxImage::HistogramStretch(long method, double threshold)
+ 		// calculate LUT
+ 		BYTE lut[256];
+ 		for (x = 0; x <256; x++){
+-			lut[x] = (BYTE)max(0,min(255,(255 * (x - minc) / (maxc - minc))));
++			lut[x] = (BYTE)cxmax(0,cxmin(255,(255 * (x - minc) / (maxc - minc))));
+ 		}
+ 
+ 		// normalize image
+@@ -225,7 +225,7 @@ bool CxImage::HistogramStretch(long method, double threshold)
+ 		BYTE range = maxR - minR;
+ 		if (range != 0)	{
+ 			for (x = 0; x <256; x++){
+-				lutR[x] = (BYTE)max(0,min(255,(255 * (x - minR) / range)));
++				lutR[x] = (BYTE)cxmax(0,cxmin(255,(255 * (x - minR) / range)));
+ 			}
+ 		} else lutR[minR] = minR;
+ 
+@@ -233,7 +233,7 @@ bool CxImage::HistogramStretch(long method, double threshold)
+ 		range = maxG - minG;
+ 		if (range != 0)	{
+ 			for (x = 0; x <256; x++){
+-				lutG[x] = (BYTE)max(0,min(255,(255 * (x - minG) / range)));
++				lutG[x] = (BYTE)cxmax(0,cxmin(255,(255 * (x - minG) / range)));
+ 			}
+ 		} else lutG[minG] = minG;
+ 			
+@@ -241,7 +241,7 @@ bool CxImage::HistogramStretch(long method, double threshold)
+ 		range = maxB - minB;
+ 		if (range != 0)	{
+ 			for (x = 0; x <256; x++){
+-				lutB[x] = (BYTE)max(0,min(255,(255 * (x - minB) / range)));
++				lutB[x] = (BYTE)cxmax(0,cxmin(255,(255 * (x - minB) / range)));
+ 			}
+ 		} else lutB[minB] = minB;
+ 
+@@ -292,7 +292,7 @@ bool CxImage::HistogramStretch(long method, double threshold)
+ 		// calculate LUT
+ 		BYTE lut[256];
+ 		for (x = 0; x <256; x++){
+-			lut[x] = (BYTE)max(0,min(255,(255 * (x - minc) / (maxc - minc))));
++			lut[x] = (BYTE)cxmax(0,cxmin(255,(255 * (x - minc) / (maxc - minc))));
+ 		}
+ 
+ 		for(y=0; y<head.biHeight; y++){
+diff --git a/lib/cximage-6.0/CxImage/ximaint.cpp b/lib/cximage-6.0/CxImage/ximaint.cpp
+index 989d76c..5d49213 100644
+--- a/lib/cximage-6.0/CxImage/ximaint.cpp
++++ b/lib/cximage-6.0/CxImage/ximaint.cpp
+@@ -26,8 +26,8 @@ void CxImage::OverflowCoordinates(long &x, long &y, OverflowMethod const ofMetho
+   switch (ofMethod) {
+     case OM_REPEAT:
+       //clip coordinates
+-      x=max(x,0); x=min(x, head.biWidth-1);
+-      y=max(y,0); y=min(y, head.biHeight-1);
++      x=cxmax(x,0); x=cxmin(x, head.biWidth-1);
++      y=cxmax(y,0); y=cxmin(y, head.biHeight-1);
+       break;
+     case OM_WRAP:
+       //wrap coordinates
+@@ -59,8 +59,8 @@ void CxImage::OverflowCoordinates(float &x, float &y, OverflowMethod const ofMet
+   switch (ofMethod) {
+     case OM_REPEAT:
+       //clip coordinates
+-      x=max(x,0); x=min(x, head.biWidth-1);
+-      y=max(y,0); y=min(y, head.biHeight-1);
++      x=cxmax(x,0); x=cxmin(x, head.biWidth-1);
++      y=cxmax(y,0); y=cxmin(y, head.biHeight-1);
+       break;
+     case OM_WRAP:
+       //wrap coordinates
+diff --git a/lib/cximage-6.0/CxImage/ximaiter.h b/lib/cximage-6.0/CxImage/ximaiter.h
+index 9788919..01a720b 100644
+--- a/lib/cximage-6.0/CxImage/ximaiter.h
++++ b/lib/cximage-6.0/CxImage/ximaiter.h
+@@ -140,7 +140,7 @@ inline void CImageIterator::SetY(int y)
+ inline void CImageIterator::SetRow(BYTE *buf, int n)
+ {
+ 	if (n<0) n = (int)ima->GetEffWidth();
 -	else n = min(n,(int)ima->GetEffWidth());
 +	else n = cxmin(n,(int)ima->GetEffWidth());
  
@@ -597,7 +707,55 @@ index b3bd3da..3788c98 100644
 -		length = min(length,(int)(3*head.biWidth));
 +		length = cxmin(length,(int)info.dwEffWidth);
 +		length = cxmin(length,(int)(3*head.biWidth));
- 		for (int i=0;i needed for grayscale PNGs
+ 		for (int i=0;i<length;i+=3){
+ 			temp = buffer[i]; buffer[i] = buffer[i+2]; buffer[i+2] = temp;
+ 		}
+@@ -444,7 +444,7 @@ void CxImage::SetPalette(DWORD n, BYTE *r, BYTE *g, BYTE *b)
+ 	if (!g) g = r;
+ 	if (!b) b = g;
+ 	RGBQUAD* ppal=GetPalette();
+-	DWORD m=min(n,head.biClrUsed);
++	DWORD m=cxmin(n,head.biClrUsed);
+ 	for (DWORD i=0; i<m;i++){
+ 		ppal[i].rgbRed=r[i];
+ 		ppal[i].rgbGreen=g[i];
+@@ -457,7 +457,7 @@ void CxImage::SetPalette(rgb_color *rgb,DWORD nColors)
+ {
+ 	if ((!rgb)||(pDib==NULL)||(head.biClrUsed==0)) return;
+ 	RGBQUAD* ppal=GetPalette();
+-	DWORD m=min(nColors,head.biClrUsed);
++	DWORD m=cxmin(nColors,head.biClrUsed);
+ 	for (DWORD i=0; i<m;i++){
+ 		ppal[i].rgbRed=rgb[i].r;
+ 		ppal[i].rgbGreen=rgb[i].g;
+@@ -469,7 +469,7 @@ void CxImage::SetPalette(rgb_color *rgb,DWORD nColors)
+ void CxImage::SetPalette(RGBQUAD* pPal,DWORD nColors)
+ {
+ 	if ((pPal==NULL)||(pDib==NULL)||(head.biClrUsed==0)) return;
+-	memcpy(GetPalette(),pPal,min(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
++	memcpy(GetPalette(),pPal,cxmin(GetPaletteSize(),nColors*sizeof(RGBQUAD)));
+ 	info.last_c_isvalid = false;
+ }
+ ////////////////////////////////////////////////////////////////////////////////
+@@ -654,10 +654,10 @@ void CxImage::SetClrImportant(DWORD ncolors)
+ 
+ 	switch(head.biBitCount){
+ 	case 1:
+-		head.biClrImportant = min(ncolors,2);
++		head.biClrImportant = cxmin(ncolors,2);
+ 		break;
+ 	case 4:
+-		head.biClrImportant = min(ncolors,16);
++		head.biClrImportant = cxmin(ncolors,16);
+ 		break;
+ 	case 8:
+ 		head.biClrImportant = ncolors;
+diff --git a/lib/cximage-6.0/CxImage/ximapng.cpp b/lib/cximage-6.0/CxImage/ximapng.cpp
+index a58441c..4b5cc50 100644
+--- a/lib/cximage-6.0/CxImage/ximapng.cpp
++++ b/lib/cximage-6.0/CxImage/ximapng.cpp
+@@ -206,9 +206,9 @@ bool CxImagePNG::Decode(CxFile *hFile)
+ 	} else SetGrayPalette(); //<DP> needed for grayscale PNGs
  	
  #ifdef USE_NEW_LIBPNG_API
 -	int nshift = max(0,(_bit_depth>>3)-1)<<3;
@@ -612,13 +770,17 @@ index b3bd3da..3788c98 100644
  			if (pal){
  				DWORD ip;
  #ifdef USE_NEW_LIBPNG_API
--				for (ip=0;ipnum_trans);ip++)
-+				for (ip=0;ipnum_trans);ip++)
+-				for (ip=0;ip<min(head.biClrUsed,(unsigned long)_num_trans);ip++)
++				for (ip=0;ip<cxmin(head.biClrUsed,(unsigned long)_num_trans);ip++)
+ 					pal[ip].rgbReserved=_trans_alpha[ip];
+ #else
+-				for (ip=0;ip<min(head.biClrUsed,(unsigned long)info_ptr->num_trans);ip++)
++				for (ip=0;ip<cxmin(head.biClrUsed,(unsigned long)info_ptr->num_trans);ip++)
  #if PNG_LIBPNG_VER > 10399
  					pal[ip].rgbReserved=info_ptr->trans_alpha[ip];
  #else
 @@ -737,9 +737,9 @@ bool CxImagePNG::Encode(CxFile *hFile)
- #endif // CXIMAGE_SUPPORT_ALPHA	// 
+ #endif // CXIMAGE_SUPPORT_ALPHA	// <vho>
  
  #ifdef USE_NEW_LIBPNG_API
 -	int row_size = max(info.dwEffWidth, (_width * _channels * _bit_depth / 8));
@@ -656,7 +818,11 @@ index 3a7c9a1..37cd10f 100644
 --- a/lib/cximage-6.0/CxImage/ximasel.cpp
 +++ b/lib/cximage-6.0/CxImage/ximasel.cpp
 @@ -113,15 +113,15 @@ bool CxImage::SelectionAddRect(RECT r, BYTE level)
- 	if (r.left r2.left) info.rSelectionBox.left = max(0L,min(head.biWidth,r2.left));
+ 	if (r.left<r.right) {r2.left=r.left; r2.right=r.right; } else {r2.left=r.right ; r2.right=r.left; }
+ 	if (r.bottom<r.top) {r2.bottom=r.bottom; r2.top=r.top; } else {r2.bottom=r.top ; r2.top=r.bottom; }
+ 
+-	if (info.rSelectionBox.top <= r2.top) info.rSelectionBox.top = max(0L,min(head.biHeight,r2.top+1));
+-	if (info.rSelectionBox.left > r2.left) info.rSelectionBox.left = max(0L,min(head.biWidth,r2.left));
 -	if (info.rSelectionBox.right <= r2.right) info.rSelectionBox.right = max(0L,min(head.biWidth,r2.right+1));
 -	if (info.rSelectionBox.bottom > r2.bottom) info.rSelectionBox.bottom = max(0L,min(head.biHeight,r2.bottom));
 +	if (info.rSelectionBox.top <= r2.top) info.rSelectionBox.top = cxmax(0L,cxmin(head.biHeight,r2.top+1));
@@ -673,7 +839,13 @@ index 3a7c9a1..37cd10f 100644
 +	long xmin = cxmax(0L,cxmin(head.biWidth,r2.left));
 +	long xmax = cxmax(0L,cxmin(head.biWidth,r2.right+1));
  
- 	for (long y=ymin; y (xcenter - xradius)) info.rSelectionBox.left = max(0L,min(head.biWidth,(xcenter - xradius)));
+ 	for (long y=ymin; y<ymax; y++)
+ 		memset(pSelection + xmin + y * head.biWidth, level, xmax-xmin);
+@@ -144,18 +144,18 @@ bool CxImage::SelectionAddEllipse(RECT r, BYTE level)
+ 	long xcenter = (r.right + r.left)/2;
+ 	long ycenter = (r.top + r.bottom)/2;
+ 
+-	if (info.rSelectionBox.left > (xcenter - xradius)) info.rSelectionBox.left = max(0L,min(head.biWidth,(xcenter - xradius)));
 -	if (info.rSelectionBox.right <= (xcenter + xradius)) info.rSelectionBox.right = max(0L,min(head.biWidth,(xcenter + xradius + 1)));
 -	if (info.rSelectionBox.bottom > (ycenter - yradius)) info.rSelectionBox.bottom = max(0L,min(head.biHeight,(ycenter - yradius)));
 -	if (info.rSelectionBox.top <= (ycenter + yradius)) info.rSelectionBox.top = max(0L,min(head.biHeight,(ycenter + yradius + 1)));
@@ -692,7 +864,14 @@ index 3a7c9a1..37cd10f 100644
 +	long ymax = cxmax(0L,cxmin(head.biHeight,ycenter + yradius + 1));
  
  	long y,yo;
--	for (y=ymin; yx < next->x) {r2.left=current->x; r2.right=next->x; } else {r2.left=next->x ; r2.right=current->x; }
+-	for (y=ymin; y<min(ycenter,ymax); y++){
++	for (y=ymin; y<cxmin(ycenter,ymax); y++){
+ 		for (long x=xmin; x<xmax; x++){
+ 			yo = (long)(ycenter - yradius * sqrt(1-pow((float)(x - xcenter)/(float)xradius,2)));
+ 			if (yo<y) pSelection[x + y * head.biWidth] = level;
+@@ -268,10 +268,10 @@ bool CxImage::SelectionAddPolygon(POINT *points, long npoints, BYTE level)
+ 		RECT r2;
+ 		if (current->x < next->x) {r2.left=current->x; r2.right=next->x; } else {r2.left=next->x ; r2.right=current->x; }
  		if (current->y < next->y) {r2.bottom=current->y; r2.top=next->y; } else {r2.bottom=next->y ; r2.top=current->y; }
 -		if (localbox.top < r2.top) localbox.top = max(0L,min(head.biHeight-1,r2.top+1));
 -		if (localbox.left > r2.left) localbox.left = max(0L,min(head.biWidth-1,r2.left-1));
@@ -781,7 +960,7 @@ index 64a71e7..84d5e03 100644
  					//anything else than 24bpp (and 1bpp): palette
 -					for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 +					for (x = xs; x < cxmin(newWidth, xs+RBLOCK); x++){
- 						info.nProgress = (long)(100*x/newWidth); //
+ 						info.nProgress = (long)(100*x/newWidth); //<Anatoly Ivasyuk>
  						x2=newWidth-x-1;
 -						for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 +						for (y = ys; y < cxmin(newHeight, ys+RBLOCK); y++){
@@ -817,7 +996,7 @@ index 64a71e7..84d5e03 100644
  					//RGB24 optimized pixel access:
 -					for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 +					for (y = ys; y < cxmin(newHeight, ys+RBLOCK); y++){
- 						info.nProgress = (long)(100*y/newHeight); //
+ 						info.nProgress = (long)(100*y/newHeight); //<Anatoly Ivasyuk>
  						y2=newHeight-y-1;
  						dstPtr = (BYTE*) imgDest.BlindGetPixelPointer(xs,y);
  						srcPtr = (BYTE*) BlindGetPixelPointer(y2, xs);
@@ -832,7 +1011,7 @@ index 64a71e7..84d5e03 100644
  					//anything else than BW & RGB24: palette
 -					for (y = ys; y < min(newHeight, ys+RBLOCK); y++){
 +					for (y = ys; y < cxmin(newHeight, ys+RBLOCK); y++){
- 						info.nProgress = (long)(100*y/newHeight); //
+ 						info.nProgress = (long)(100*y/newHeight); //<Anatoly Ivasyuk>
  						y2=newHeight-y-1;
 -						for (x = xs; x < min(newWidth, xs+RBLOCK); x++){
 +						for (x = xs; x < cxmin(newWidth, xs+RBLOCK); x++){
@@ -899,7 +1078,355 @@ index 64a71e7..84d5e03 100644
 -				ifY1 = min(ymax, ifY+1);
 +				ifY1 = cxmin(ymax, ifY+1);
  				dy = fY - ifY;
- 				for(long x=0; x 1 && fy > 1) { 
+ 				for(long x=0; x<newx; x++){
+ 					fX = x * xScale;
+ 					ifX = (int)fX;
+-					ifX1 = min(xmax, ifX+1);
++					ifX1 = cxmin(xmax, ifX+1);
+ 					dx = fX - ifX;
+ 					// Interpolate using the four nearest pixels in the source
+ 					if (head.biClrUsed){
+@@ -1328,9 +1328,9 @@ bool CxImage::DecreaseBpp(DWORD nbit, bool errordiffusion, RGBQUAD* ppal, DWORD
+ 				eb=(long)c.rgbBlue - (long)ce.rgbBlue;
+ 
+ 				c = GetPixelColor(x+1,y);
+-				c.rgbRed = (BYTE)min(255L,max(0L,(long)c.rgbRed + ((er*7)/16)));
+-				c.rgbGreen = (BYTE)min(255L,max(0L,(long)c.rgbGreen + ((eg*7)/16)));
+-				c.rgbBlue = (BYTE)min(255L,max(0L,(long)c.rgbBlue + ((eb*7)/16)));
++				c.rgbRed = (BYTE)cxmin(255L,cxmax(0L,(long)c.rgbRed + ((er*7)/16)));
++				c.rgbGreen = (BYTE)cxmin(255L,cxmax(0L,(long)c.rgbGreen + ((eg*7)/16)));
++				c.rgbBlue = (BYTE)cxmin(255L,cxmax(0L,(long)c.rgbBlue + ((eb*7)/16)));
+ 				SetPixelColor(x+1,y,c);
+ 				int coeff=1;
+ 				for(int i=-1; i<2; i++){
+@@ -1343,9 +1343,9 @@ bool CxImage::DecreaseBpp(DWORD nbit, bool errordiffusion, RGBQUAD* ppal, DWORD
+ 						coeff=1; break;
+ 					}
+ 					c = GetPixelColor(x+i,y+1);
+-					c.rgbRed = (BYTE)min(255L,max(0L,(long)c.rgbRed + ((er * coeff)/16)));
+-					c.rgbGreen = (BYTE)min(255L,max(0L,(long)c.rgbGreen + ((eg * coeff)/16)));
+-					c.rgbBlue = (BYTE)min(255L,max(0L,(long)c.rgbBlue + ((eb * coeff)/16)));
++					c.rgbRed = (BYTE)cxmin(255L,cxmax(0L,(long)c.rgbRed + ((er * coeff)/16)));
++					c.rgbGreen = (BYTE)cxmin(255L,cxmax(0L,(long)c.rgbGreen + ((eg * coeff)/16)));
++					c.rgbBlue = (BYTE)cxmin(255L,cxmax(0L,(long)c.rgbBlue + ((eb * coeff)/16)));
+ 					SetPixelColor(x+i,y+1,c);
+ 				}
+ 			}
+@@ -1566,10 +1566,10 @@ bool CxImage::Dither(long method)
+ 				}
+ 
+ 				nlevel = GetPixelIndex(x + 1, y) + (error * 8) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 1, y, level);
+ 				nlevel = GetPixelIndex(x + 2, y) + (error * 4) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 2, y, level);
+ 				int i;
+ 				for (i = -2; i < 3; i++) {
+@@ -1591,7 +1591,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 1) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 1, level);
+ 				}
+ 			}
+@@ -1620,10 +1620,10 @@ bool CxImage::Dither(long method)
+ 				}
+ 
+ 				nlevel = GetPixelIndex(x + 1, y) + (error * 8) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 1, y, level);
+ 				nlevel = GetPixelIndex(x + 2, y) + (error * 4) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 2, y, level);
+ 				int i;
+ 				for (i = -2; i < 3; i++) {
+@@ -1645,7 +1645,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 1) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 1, level);
+ 				}
+ 				for (i = -2; i < 3; i++) {
+@@ -1667,7 +1667,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 2) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 2, level);
+ 				}
+ 			}
+@@ -1696,10 +1696,10 @@ bool CxImage::Dither(long method)
+ 				}
+ 
+ 				nlevel = GetPixelIndex(x + 1, y) + (error * 7) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 1, y, level);
+ 				nlevel = GetPixelIndex(x + 2, y) + (error * 5) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 2, y, level);
+ 				int i;
+ 				for (i = -2; i < 3; i++) {
+@@ -1721,7 +1721,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 1) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 1, level);
+ 				}
+ 				for (i = -2; i < 3; i++) {
+@@ -1743,7 +1743,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 2) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 2, level);
+ 				}
+ 			}
+@@ -1772,10 +1772,10 @@ bool CxImage::Dither(long method)
+ 				}
+ 
+ 				nlevel = GetPixelIndex(x + 1, y) + (error * 5) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 1, y, level);
+ 				nlevel = GetPixelIndex(x + 2, y) + (error * 3) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(x + 2, y, level);
+ 				int i;
+ 				for (i = -2; i < 3; i++) {
+@@ -1797,7 +1797,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 1) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 1, level);
+ 				}
+ 				for (i = -1; i < 2; i++) {
+@@ -1813,7 +1813,7 @@ bool CxImage::Dither(long method)
+ 						break;
+ 					}
+ 					nlevel = GetPixelIndex(x + i, y + 2) + (error * coeff) / TotalCoeffSum;
+-					level = (BYTE)min(255, max(0, (int)nlevel));
++					level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 					SetPixelIndex(x + i, y + 2, level);
+ 				}
+ 			}
+@@ -1845,76 +1845,76 @@ bool CxImage::Dither(long method)
+ 				int tmp_index_y = y;
+ 				int tmp_coeff = 32;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x - 3;
+ 				tmp_index_y = y + 1;
+ 				tmp_coeff = 12;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x - 1;
+ 				tmp_coeff = 26;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x + 1;
+ 				tmp_coeff = 30;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x + 3;
+ 				tmp_coeff = 16;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x - 2;
+ 				tmp_index_y = y + 2;
+ 				tmp_coeff = 12;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x;
+ 				tmp_coeff = 26;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x + 2;
+ 				tmp_coeff = 12;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x - 3;
+ 				tmp_index_y = y + 3;
+ 				tmp_coeff = 5;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x - 1;
+ 				tmp_coeff = 12;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x + 1;
+ 				tmp_coeff = 12;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 
+ 				tmp_index_x = x + 3;
+ 				tmp_coeff = 5;
+ 				nlevel = GetPixelIndex(tmp_index_x, tmp_index_y) + (error * tmp_coeff) / TotalCoeffSum;
+-				level = (BYTE)min(255, max(0, (int)nlevel));
++				level = (BYTE)cxmin(255, cxmax(0, (int)nlevel));
+ 				SetPixelIndex(tmp_index_x, tmp_index_y, level);
+ 			}
+ 		}
+@@ -1941,7 +1941,7 @@ bool CxImage::Dither(long method)
+ 			Bmatrix[i] = (BYTE)(dither);
+ 		}
+ 
+-		int scale = max(0,(8-2*order));
++		int scale = cxmax(0,(8-2*order));
+ 		int level;
+ 		for (long y=0;y<head.biHeight;y++){
+ 			info.nProgress = (long)(100*y/head.biHeight);
+@@ -1981,7 +1981,7 @@ bool CxImage::Dither(long method)
+ 				}
+ 
+ 				nlevel = GetPixelIndex(x+1,y) + (error * 7)/16;
+-				level = (BYTE)min(255,max(0,(int)nlevel));
++				level = (BYTE)cxmin(255,cxmax(0,(int)nlevel));
+ 				SetPixelIndex(x+1,y,level);
+ 				for(int i=-1; i<2; i++){
+ 					switch(i){
+@@ -1993,7 +1993,7 @@ bool CxImage::Dither(long method)
+ 						coeff=1; break;
+ 					}
+ 					nlevel = GetPixelIndex(x+i,y+1) + (error * coeff)/16;
+-					level = (BYTE)min(255,max(0,(int)nlevel));
++					level = (BYTE)cxmin(255,cxmax(0,(int)nlevel));
+ 					SetPixelIndex(x+i,y+1,level);
+ 				}
+ 			}
+@@ -2031,7 +2031,7 @@ bool CxImage::CropRotatedRectangle( long topx, long topy, long width, long heigh
+ 	if ( fabs(angle)<0.0002 )
+ 		return Crop( topx, topy, topx+width, topy+height, iDst);
+ 
+-	startx = min(topx, topx - (long)(sin_angle*(double)height));
++	startx = cxmin(topx, topx - (long)(sin_angle*(double)height));
+ 	endx   = topx + (long)(cos_angle*(double)width);
+ 	endy   = topy + (long)(cos_angle*(double)height + sin_angle*(double)width);
+ 	// check: corners of the rectangle must be inside
+@@ -2079,10 +2079,10 @@ bool CxImage::Crop(long left, long top, long right, long bottom, CxImage* iDst)
+ {
+ 	if (!pDib) return false;
+ 
+-	long startx = max(0L,min(left,head.biWidth));
+-	long endx = max(0L,min(right,head.biWidth));
+-	long starty = head.biHeight - max(0L,min(top,head.biHeight));
+-	long endy = head.biHeight - max(0L,min(bottom,head.biHeight));
++	long startx = cxmax(0L,cxmin(left,head.biWidth));
++	long endx = cxmax(0L,cxmin(right,head.biWidth));
++	long starty = head.biHeight - cxmax(0L,cxmin(top,head.biHeight));
++	long endy = head.biHeight - cxmax(0L,cxmin(bottom,head.biHeight));
+ 
+ 	if (startx==endx || starty==endy) return false;
+ 
+@@ -2443,8 +2443,8 @@ bool CxImage::CircleTransform(int type,long rmax,float Koeff)
+ 						nx=x+(x%32)-16;
+ 						ny=y;
+ 					}
+-//					nx=max(xmin,min(nx,xmax));
+-//					ny=max(ymin,min(ny,ymax));
++//					nx=cxmax(xmin,cxmin(nx,xmax));
++//					ny=cxmax(ymin,cxmin(ny,ymax));
+ 				}
+ 				else { nx=-1;ny=-1;}
+ 				if (head.biClrUsed==0){
+diff --git a/lib/cximage-6.0/CxImage/ximawnd.cpp b/lib/cximage-6.0/CxImage/ximawnd.cpp
+index 2ae2f93..7029cc7 100644
+--- a/lib/cximage-6.0/CxImage/ximawnd.cpp
++++ b/lib/cximage-6.0/CxImage/ximawnd.cpp
+@@ -682,10 +682,10 @@ long CxImage::Draw(HDC hdc, long x, long y, long cx, long cy, RECT* pClipRect, b
+ 	RECT clipbox,paintbox;
+ 	GetClipBox(hdc,&clipbox);
+ 
+-	paintbox.top = min(clipbox.bottom,max(clipbox.top,y));
+-	paintbox.left = min(clipbox.right,max(clipbox.left,x));
+-	paintbox.right = max(clipbox.left,min(clipbox.right,x+cx));
+-	paintbox.bottom = max(clipbox.top,min(clipbox.bottom,y+cy));
++	paintbox.top = cxmin(clipbox.bottom,cxmax(clipbox.top,y));
++	paintbox.left = cxmin(clipbox.right,cxmax(clipbox.left,x));
++	paintbox.right = cxmax(clipbox.left,cxmin(clipbox.right,x+cx));
++	paintbox.bottom = cxmax(clipbox.top,cxmin(clipbox.bottom,y+cy));
+ 
+ 	long destw = paintbox.right - paintbox.left;
+ 	long desth = paintbox.bottom - paintbox.top;
+@@ -730,12 +730,12 @@ long CxImage::Draw(HDC hdc, long x, long y, long cx, long cy, RECT* pClipRect, b
+ 
+ 				for(yy=0;yy<desth;yy++){
+ 					dy = head.biHeight-(ymax-yy-y)*fy;
+-					sy = max(0L,(long)floor(dy));
++					sy = cxmax(0L,(long)floor(dy));
+ 					psrc = info.pImage+sy*info.dwEffWidth;
+ 					pdst = pbase+yy*ew;
+ 					for(xx=0;xx<destw;xx++){
+ 						dx = (xx+xmin-x)*fx;
+-						sx = max(0L,(long)floor(dx));
++						sx = cxmax(0L,(long)floor(dx));
+ #if CXIMAGE_SUPPORT_INTERPOLATION
+ 						if (bSmooth){
+ 							if (fx > 1 && fy > 1) { 
 @@ -813,7 +813,7 @@ long CxImage::Draw(HDC hdc, long x, long y, long cx, long cy, RECT* pClipRect, b
  				
- 				for(yy=0;yy>8);
+ 				for(yy=0;yy<desth;yy++){
+ 					dy = head.biHeight-(ymax-yy-y)*fy;
+-					sy = max(0L,(long)floor(dy));
++					sy = cxmax(0L,(long)floor(dy));
+ 
+ 					alphaoffset = sy*head.biWidth;
+ 					pdst = pbase + yy*ew;
+@@ -821,7 +821,7 @@ long CxImage::Draw(HDC hdc, long x, long y, long cx, long cy, RECT* pClipRect, b
+ 
+ 					for(xx=0;xx<destw;xx++){
+ 						dx = (xx+xmin-x)*fx;
+-						sx = max(0L,(long)floor(dx));
++						sx = cxmax(0L,(long)floor(dx));
+ 
+ 						if (bAlpha) a=pAlpha[alphaoffset+sx]; else a=255;
+ 						a =(BYTE)((a*(1+info.nAlphaMax))>>8);
