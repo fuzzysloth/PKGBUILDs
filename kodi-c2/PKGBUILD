@@ -85,6 +85,7 @@ package_kodi-c2() {
     'unzip: Archives support'
     'upower: Display battery level'
   )
+  install="kodi.install"
   provides=('xbmc' 'kodi')
   conflicts=('xbmc' 'kodi')
   replaces=('xbmc')
