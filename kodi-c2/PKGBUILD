@@ -64,11 +64,11 @@ build() {
 package_kodi-c2() {
   pkgdesc="A software media player and entertainment hub for digital media (ODROID-C2)"
   depends=(
-    'bluez-libs' 'desktop-file-utils' 'fribidi' 'freetype2' 'glew'
-    'hicolor-icon-theme' 'libcdio' 'libjpeg-turbo' 'libmariadbclient'
-    'libmicrohttpd' 'libpulse' 'libssh' 'libva' 'libvdpau' 'libxrandr' 'libxslt'
-    'lzo' 'mesa' 'python2-pillow' 'python2-simplejson' 'smbclient' 'taglib'
-    'tinyxml' 'yajl' 'xorg-xdpyinfo'
+    'aml-libs-c2' 'bluez-libs' 'desktop-file-utils' 'fribidi' 'freetype2'
+    'glew' 'hicolor-icon-theme' 'libcdio' 'libjpeg-turbo' 'libmariadbclient'
+    'libmicrohttpd' 'libpulse' 'libssh' 'libva' 'libvdpau' 'libxrandr'
+    'libxslt' 'lzo' 'mesa' 'odroid-c2-libgl-fb' 'python2-pillow' 
+    'python2-simplejson' 'smbclient' 'taglib' 'tinyxml' 'yajl' 'xorg-xdpyinfo'
   )
   optdepends=(
     'afpfs-ng: Apple shares support'
